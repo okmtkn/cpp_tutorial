@@ -9,45 +9,54 @@
 #include "sim/model.hpp"
 
 int main() {
-    // ---- パラメータ ----
-    const double m = 1.0;    // 質量 [kg]
-    const double c = 0.5;    // 減衰係数 [N*s/m]
-    const double k = 100.0;  // ばね定数 [N/m]
-    const double x0 = 0.05;  // 初期変位 [m]
-    const double v0 = 0.0;   // 初期速度 [m/s]
-    const double dt = 0.001; // 時間刻み [s]
-    const double t_end = 5.0;
+    // ---- パラメータ（実行中に変わらない定数なので k + PascalCase）----
+    constexpr double kMass = 1.0;                  // 質量 m [kg]
+    constexpr double kDamping = 0.5;               // 減衰係数 c [N*s/m]
+    constexpr double kStiffness = 100.0;           // ばね定数 k [N/m]
+    constexpr double kInitialDisplacement = 0.05;  // 初期変位 x0 [m]
+    constexpr double kInitialVelocity = 0.0;       // 初期速度 v0 [m/s]
+    constexpr double kTimeStep = 0.001;            // 時間刻み dt [s]
+    constexpr double kEndTime = 5.0;               // 終了時刻 [s]
 
-    sim::SpringMassDamper model(m, c, k);
-    std::cout << "omega = " << model.omega() << " rad/s, "
-              << "zeta = " << model.zeta() << "\n";
+    sim::SpringMassDamper oscillator(kMass, kDamping, kStiffness);
+    std::cout << "omega = " << oscillator.NaturalFrequency() << " rad/s, "
+              << "zeta = " << oscillator.DampingRatio() << "\n";
 
     // ---- シミュレーション（RK4）----
-    auto history = sim::simulate(model, x0, v0, dt, t_end, sim::Method::RK4);
+    auto rk4_history =
+        sim::Simulate(oscillator, kInitialDisplacement, kInitialVelocity,
+                      kTimeStep, kEndTime, sim::IntegrationMethod::kRk4);
 
     // ---- CSV出力 ----
-    std::ofstream out("result.csv");
-    out << "t,x,v\n";
-    for (const sim::State& s : history) {
-        out << s.t << "," << s.x << "," << s.v << "\n";
+    std::ofstream csv_file("result.csv");
+    csv_file << "time,displacement,velocity\n";
+    for (const sim::State& state : rk4_history) {
+        csv_file << state.time << "," << state.displacement << ","
+                 << state.velocity << "\n";
     }
-    std::cout << "wrote result.csv (" << history.size() << " rows)\n";
+    std::cout << "wrote result.csv (" << rk4_history.size() << " rows)\n";
 
-    // ---- 最大振幅（減衰していれば初期変位 x0 のはず）----
-    auto peak = std::max_element(
-        history.begin(), history.end(),
-        [](const sim::State& a, const sim::State& b) {
-            return std::abs(a.x) < std::abs(b.x);
+    // ---- 最大振幅（減衰していれば初期変位のはず）----
+    auto peak_state = std::max_element(
+        rk4_history.begin(), rk4_history.end(),
+        [](const sim::State& lhs, const sim::State& rhs) {
+            return std::abs(lhs.displacement) < std::abs(rhs.displacement);
         });
-    std::cout << "max |x| = " << std::abs(peak->x) << " m at t = " << peak->t
-              << " s\n";
+    std::cout << "max |x| = " << std::abs(peak_state->displacement)
+              << " m at t = " << peak_state->time << " s\n";
 
-    // ---- 精度比較: オイラー法 vs RK4 vs 理論解（t_end 時点）----
-    auto euler = sim::simulate(model, x0, v0, dt, t_end,
-                               sim::Method::SemiImplicitEuler);
-    const double exact = model.exact_x(t_end, x0, v0);
-    std::cout << "x(t_end): exact = " << exact
-              << ", euler err = " << std::abs(euler.back().x - exact)
-              << ", rk4 err = " << std::abs(history.back().x - exact) << "\n";
+    // ---- 精度比較: オイラー法 vs RK4 vs 理論解（終了時刻の時点）----
+    auto euler_history = sim::Simulate(
+        oscillator, kInitialDisplacement, kInitialVelocity, kTimeStep, kEndTime,
+        sim::IntegrationMethod::kSemiImplicitEuler);
+    const double exact_displacement = oscillator.ExactDisplacement(
+        kEndTime, kInitialDisplacement, kInitialVelocity);
+    const double euler_error =
+        std::abs(euler_history.back().displacement - exact_displacement);
+    const double rk4_error =
+        std::abs(rk4_history.back().displacement - exact_displacement);
+    std::cout << "x(t_end): exact = " << exact_displacement
+              << ", euler err = " << euler_error << ", rk4 err = " << rk4_error
+              << "\n";
     return 0;
 }

@@ -1,25 +1,26 @@
 // 6.1 RAII — デストラクタはスコープを抜けるとき自動で呼ばれる
 #include <iostream>
 
-class Probe {
+// 生成と破棄のタイミングを画面に表示するだけのクラス
+class LifetimeLogger {
 public:
-    Probe(const char* name) : name_(name) {
-        std::cout << name_ << ": constructed\n";
+    LifetimeLogger(const char* label) : label_(label) {
+        std::cout << label_ << ": constructed\n";
     }
-    ~Probe() {  // デストラクタ
-        std::cout << name_ << ": destructed\n";
+    ~LifetimeLogger() {  // デストラクタ
+        std::cout << label_ << ": destructed\n";
     }
 
 private:
-    const char* name_;
+    const char* label_;
 };
 
 int main() {
-    Probe a("a");
+    LifetimeLogger outer_logger("outer");
     {
-        Probe b("b");
+        LifetimeLogger inner_logger("inner");
         std::cout << "--- inner scope end ---\n";
-    }  // ここで b のデストラクタが自動で呼ばれる
+    }  // ここで inner_logger のデストラクタが自動で呼ばれる
     std::cout << "--- main end ---\n";
     return 0;
-}  // ここで a のデストラクタが自動で呼ばれる
+}  // ここで outer_logger のデストラクタが自動で呼ばれる

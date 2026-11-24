@@ -14,8 +14,8 @@ int main() {
     }
 
     std::cout << "---- " << lines.size() << " line(s) ----\n";
-    for (const std::string& s : lines) {  // 読むだけなので const 参照
-        std::cout << s << "\n";
+    for (const std::string& stored_line : lines) {  // 読むだけなので const 参照
+        std::cout << stored_line << "\n";
     }
     return 0;
 }

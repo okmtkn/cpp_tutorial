@@ -3,33 +3,33 @@
 #include <string>
 #include <vector>
 
-// 任意の型 T について max_of を定義する
+// 任意の型 T について MaxOf を定義する
 template <typename T>
-T max_of(T a, T b) {
-    return (a > b) ? a : b;
+T MaxOf(T lhs, T rhs) {
+    return (lhs > rhs) ? lhs : rhs;
 }
 
 // 「+= できる型」の vector なら何でも合計できる
 template <typename T>
-T sum(const std::vector<T>& v) {
+T Sum(const std::vector<T>& values) {
     T total{};  // T{} は「その型のゼロ値」(0, 0.0, 空文字列...)
-    for (const T& x : v) {
-        total += x;
+    for (const T& value : values) {
+        total += value;
     }
     return total;
 }
 
 int main() {
-    std::cout << max_of(3, 7) << "\n";      // T = int
-    std::cout << max_of(2.5, 1.4) << "\n";  // T = double
-    std::cout << max_of(std::string("abc"), std::string("abd")) << "\n";
+    std::cout << MaxOf(3, 7) << "\n";      // T = int
+    std::cout << MaxOf(2.5, 1.4) << "\n";  // T = double
+    std::cout << MaxOf(std::string("abc"), std::string("abd")) << "\n";
 
-    std::vector<int> a = {1, 2, 3};
-    std::vector<double> b = {0.5, 0.25};
-    std::vector<std::string> c = {"ab", "cd", "ef"};
+    std::vector<int> daily_part_counts = {1, 2, 3};         // 日ごとの部品数 [個]
+    std::vector<double> weight_masses = {0.5, 0.25};        // おもりの質量 [kg]
+    std::vector<std::string> code_parts = {"ab", "cd", "ef"};  // 部品コードの断片
 
-    std::cout << sum(a) << "\n";  // 6
-    std::cout << sum(b) << "\n";  // 0.75
-    std::cout << sum(c) << "\n";  // abcdef（+= が連結だから）
+    std::cout << Sum(daily_part_counts) << "\n";  // 6
+    std::cout << Sum(weight_masses) << "\n";      // 0.75
+    std::cout << Sum(code_parts) << "\n";         // abcdef（+= が連結だから）
     return 0;
 }

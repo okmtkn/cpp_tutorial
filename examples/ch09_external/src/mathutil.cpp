@@ -2,28 +2,29 @@
 
 #include <cmath>
 
-double trapezoid_sin(double a, double b, int n) {
-    const double h = (b - a) / n;
-    double s = 0.5 * (std::sin(a) + std::sin(b));
-    for (int i = 1; i < n; ++i) {
-        s += std::sin(a + i * h);
+double IntegrateSinTrapezoid(double lower_limit, double upper_limit,
+                             int num_intervals) {
+    const double width = (upper_limit - lower_limit) / num_intervals;
+    double sum = 0.5 * (std::sin(lower_limit) + std::sin(upper_limit));
+    for (int i = 1; i < num_intervals; ++i) {
+        sum += std::sin(lower_limit + i * width);
     }
-    return s * h;
+    return sum * width;
 }
 
-double mean(const std::vector<double>& v) {
+double Mean(const std::vector<double>& values) {
     double sum = 0.0;
-    for (double x : v) sum += x;
-    return sum / v.size();
+    for (double value : values) sum += value;
+    return sum / values.size();
 }
 
-std::optional<double> mean_safe(const std::vector<double>& v) {
-    if (v.empty()) return std::nullopt;
-    return mean(v);
+std::optional<double> SafeMean(const std::vector<double>& values) {
+    if (values.empty()) return std::nullopt;
+    return Mean(values);
 }
 
-double rms(const std::vector<double>& v) {
-    double sq = 0.0;
-    for (double x : v) sq += x * x;
-    return std::sqrt(sq / v.size());
+double RootMeanSquare(const std::vector<double>& values) {
+    double square_sum = 0.0;
+    for (double value : values) square_sum += value * value;
+    return std::sqrt(square_sum / values.size());
 }

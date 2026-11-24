@@ -8,14 +8,14 @@ struct Measured {
     T value;
     std::string unit;
 
-    void print() const { std::cout << value << " [" << unit << "]\n"; }
+    void Print() const { std::cout << value << " [" << unit << "]\n"; }
 };
 
 int main() {
-    Measured<double> temp{23.5, "degC"};
-    Measured<int> count{42, "cycles"};
+    Measured<double> room_temperature{23.5, "degC"};
+    Measured<int> load_cycle_count{42, "cycles"};  // 疲労試験の負荷サイクル数
 
-    temp.print();
-    count.print();
+    room_temperature.Print();
+    load_cycle_count.Print();
     return 0;
 }

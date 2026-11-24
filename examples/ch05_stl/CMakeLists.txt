@@ -5,6 +5,9 @@ project(ch05_stl CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
+
 add_executable(ch05_algorithms algorithms.cpp)
 add_executable(ch05_lambda lambda.cpp)
 add_executable(ch05_map map_table.cpp)

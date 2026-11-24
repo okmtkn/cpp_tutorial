@@ -8,46 +8,52 @@ struct Vec2 {
     double y = 0.0;
 };
 
-Vec2 operator+(const Vec2& a, const Vec2& b) { return {a.x + b.x, a.y + b.y}; }
-Vec2 operator*(double k, const Vec2& v) { return {k * v.x, k * v.y}; }
+Vec2 operator+(const Vec2& lhs, const Vec2& rhs) {
+    return {lhs.x + rhs.x, lhs.y + rhs.y};
+}
+Vec2 operator*(double scale, const Vec2& vec) {
+    return {scale * vec.x, scale * vec.y};
+}
 
 class Particle {
 public:
-    Particle(double mass, Vec2 pos, Vec2 vel)
-        : mass_(mass), pos_(pos), vel_(vel) {}
+    Particle(double mass, Vec2 position, Vec2 velocity)
+        : mass_(mass), position_(position), velocity_(velocity) {}
 
-    void update(const Vec2& f, double dt) {
-        Vec2 acc = (1.0 / mass_) * f;
-        vel_ = vel_ + dt * acc;
-        pos_ = pos_ + dt * vel_;
+    // セミインプリシット・オイラー法（先に v を更新し、新しい v で x を更新）
+    void Update(const Vec2& force, double time_step) {
+        Vec2 acceleration = (1.0 / mass_) * force;
+        velocity_ = velocity_ + time_step * acceleration;
+        position_ = position_ + time_step * velocity_;
     }
 
-    Vec2 position() const { return pos_; }
-    Vec2 velocity() const { return vel_; }
+    Vec2 position() const { return position_; }
+    Vec2 velocity() const { return velocity_; }
 
 private:
     double mass_;
-    Vec2 pos_;
-    Vec2 vel_;
+    Vec2 position_;
+    Vec2 velocity_;
 };
 
-// 着地するまで飛ばして到達距離を返す
-double simulate_range(double drag_c) {
-    Particle p(1.0, Vec2{0, 0}, Vec2{10, 10});
-    const Vec2 gravity{0.0, -9.80665};
-    const double dt = 0.001;
+// 着地するまで飛ばして到達距離 [m] を返す
+// drag_coefficient: 空気抵抗の係数 c [N*s/m]
+double SimulateRange(double drag_coefficient) {
+    Particle ball(1.0, Vec2{0, 0}, Vec2{10, 10});
+    const Vec2 gravity_force{0.0, -9.80665};
+    constexpr double kTimeStep = 0.001;
 
-    while (p.position().y >= 0.0) {
+    while (ball.position().y >= 0.0) {
         // 合力 = 重力 + 空気抵抗 (-c * v)
-        Vec2 f = gravity + (-drag_c) * p.velocity();
-        p.update(f, dt);
+        Vec2 total_force = gravity_force + (-drag_coefficient) * ball.velocity();
+        ball.Update(total_force, kTimeStep);
     }
-    return p.position().x;
+    return ball.position().x;
 }
 
 int main() {
-    std::cout << "no drag  : " << simulate_range(0.0) << " m\n";
-    std::cout << "c = 0.1  : " << simulate_range(0.1) << " m\n";
-    std::cout << "c = 0.5  : " << simulate_range(0.5) << " m\n";
+    std::cout << "no drag  : " << SimulateRange(0.0) << " m\n";
+    std::cout << "c = 0.1  : " << SimulateRange(0.1) << " m\n";
+    std::cout << "c = 0.5  : " << SimulateRange(0.5) << " m\n";
     return 0;
 }

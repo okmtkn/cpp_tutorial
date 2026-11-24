@@ -5,6 +5,9 @@ project(ch07_templates CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
+
 add_executable(ch07_func_template func_template.cpp)
 add_executable(ch07_class_template class_template.cpp)
 add_executable(ch07_optional optional_demo.cpp)

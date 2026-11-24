@@ -4,23 +4,23 @@
 #include <string>
 
 int main() {
-    // 書き込み
+    // 書き込み: 1〜5 とその2乗の表
     {
-        std::ofstream out("result.txt");
-        out << "x, x^2\n";
-        for (int x = 1; x <= 5; ++x) {
-            out << x << ", " << x * x << "\n";
+        std::ofstream output_file("result.txt");
+        output_file << "x, x^2\n";
+        for (int value = 1; value <= 5; ++value) {
+            output_file << value << ", " << value * value << "\n";
         }
     }  // スコープを抜けると自動で閉じる（close() 不要）
 
     // 読み込み
-    std::ifstream in("result.txt");
-    if (!in) {  // 開けたかのチェックは必須
+    std::ifstream input_file("result.txt");
+    if (!input_file) {  // 開けたかのチェックは必須
         std::cerr << "cannot open result.txt\n";
         return 1;
     }
     std::string line;
-    while (std::getline(in, line)) {
+    while (std::getline(input_file, line)) {
         std::cout << line << "\n";
     }
     return 0;

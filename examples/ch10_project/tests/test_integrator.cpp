@@ -8,49 +8,64 @@
 #include "sim/integrator.hpp"
 #include "sim/model.hpp"
 
-bool near(double a, double b, double tol) { return std::abs(a - b) < tol; }
+bool IsNear(double actual, double expected, double tolerance) {
+    return std::abs(actual - expected) < tolerance;
+}
 
 int main() {
-    const double x0 = 0.05, v0 = 0.0;
+    constexpr double kInitialDisplacement = 0.05;  // [m]
+    constexpr double kInitialVelocity = 0.0;       // [m/s]
 
     // (1) RK4 は理論解とよく一致するはず
     {
-        sim::SpringMassDamper model(1.0, 0.5, 100.0);
-        auto hist = sim::simulate(model, x0, v0, 0.001, 2.0, sim::Method::RK4);
-        const double exact = model.exact_x(2.0, x0, v0);
-        assert(near(hist.back().x, exact, 1e-6));
+        sim::SpringMassDamper oscillator(1.0, 0.5, 100.0);
+        auto history =
+            sim::Simulate(oscillator, kInitialDisplacement, kInitialVelocity,
+                          0.001, 2.0, sim::IntegrationMethod::kRk4);
+        const double exact_displacement = oscillator.ExactDisplacement(
+            2.0, kInitialDisplacement, kInitialVelocity);
+        assert(IsNear(history.back().displacement, exact_displacement, 1e-6));
     }
 
     // (2) セミインプリシット・オイラー法もそれなりに一致するはず（緩い許容誤差）
     {
-        sim::SpringMassDamper model(1.0, 0.5, 100.0);
-        auto hist = sim::simulate(model, x0, v0, 0.0001, 2.0,
-                                  sim::Method::SemiImplicitEuler);
-        const double exact = model.exact_x(2.0, x0, v0);
-        assert(near(hist.back().x, exact, 1e-3));
+        sim::SpringMassDamper oscillator(1.0, 0.5, 100.0);
+        auto history = sim::Simulate(
+            oscillator, kInitialDisplacement, kInitialVelocity, 0.0001, 2.0,
+            sim::IntegrationMethod::kSemiImplicitEuler);
+        const double exact_displacement = oscillator.ExactDisplacement(
+            2.0, kInitialDisplacement, kInitialVelocity);
+        assert(IsNear(history.back().displacement, exact_displacement, 1e-3));
     }
 
     // (3) 減衰なし (c=0) ならエネルギー E = (1/2)kx^2 + (1/2)mv^2 がほぼ保存する
     {
-        const double m = 1.0, k = 100.0;
-        sim::SpringMassDamper model(m, 0.0, k);
-        auto hist = sim::simulate(model, x0, v0, 0.0001, 5.0,
-                                  sim::Method::SemiImplicitEuler);
-        const double E0 = 0.5 * k * x0 * x0 + 0.5 * m * v0 * v0;
-        const auto& last = hist.back();
-        const double E1 = 0.5 * k * last.x * last.x + 0.5 * m * last.v * last.v;
-        assert(near(E1, E0, 0.01 * E0));  // 1% 以内
+        constexpr double kMass = 1.0;
+        constexpr double kStiffness = 100.0;
+        sim::SpringMassDamper undamped_oscillator(kMass, 0.0, kStiffness);
+        auto history = sim::Simulate(
+            undamped_oscillator, kInitialDisplacement, kInitialVelocity, 0.0001,
+            5.0, sim::IntegrationMethod::kSemiImplicitEuler);
+
+        const double initial_energy =
+            0.5 * kStiffness * kInitialDisplacement * kInitialDisplacement +
+            0.5 * kMass * kInitialVelocity * kInitialVelocity;
+        const sim::State& final_state = history.back();
+        const double final_energy =
+            0.5 * kStiffness * final_state.displacement * final_state.displacement +
+            0.5 * kMass * final_state.velocity * final_state.velocity;
+        assert(IsNear(final_energy, initial_energy, 0.01 * initial_energy));  // 1% 以内
     }
 
     // (4) 不正なパラメータはコンストラクタが拒否するはず
     {
-        bool thrown = false;
+        bool was_rejected = false;
         try {
-            sim::SpringMassDamper bad(-1.0, 0.5, 100.0);
+            sim::SpringMassDamper negative_mass_oscillator(-1.0, 0.5, 100.0);
         } catch (const std::invalid_argument&) {
-            thrown = true;
+            was_rejected = true;
         }
-        assert(thrown);
+        assert(was_rejected);
     }
 
     std::cout << "all tests passed\n";

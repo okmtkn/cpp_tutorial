@@ -5,6 +5,9 @@ project(ch03_functions CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
+
 add_executable(ch03_overload overload.cpp)
 add_executable(ch03_pass_by pass_by.cpp)
 add_executable(ch03_pair_binding pair_binding.cpp)

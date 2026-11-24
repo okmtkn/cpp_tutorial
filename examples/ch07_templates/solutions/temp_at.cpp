@@ -1,40 +1,45 @@
-// 第7章 演習3 (発展): 時刻 t の温度を線形補間で求める（範囲外は nullopt）
+// 第7章 演習3 (発展): 時刻 query_time の温度を線形補間で求める（範囲外は nullopt）
 #include <iostream>
 #include <optional>
 #include <vector>
 
-struct Sample {
-    double time;
-    double temp;
+struct TemperatureSample {
+    double time;         // [s]
+    double temperature;  // [degC]
 };
 
-std::optional<double> temp_at(const std::vector<Sample>& data, double t) {
-    if (data.empty() || t < data.front().time || t > data.back().time) {
+std::optional<double> TemperatureAt(const std::vector<TemperatureSample>& samples,
+                                    double query_time) {
+    if (samples.empty() || query_time < samples.front().time ||
+        query_time > samples.back().time) {
         return std::nullopt;  // データ範囲外
     }
-    // t を挟む2点を探して線形補間
-    for (std::size_t i = 0; i + 1 < data.size(); ++i) {
-        const Sample& a = data[i];
-        const Sample& b = data[i + 1];
-        if (a.time <= t && t <= b.time) {
-            const double ratio = (t - a.time) / (b.time - a.time);
-            return a.temp + ratio * (b.temp - a.temp);
+    // query_time を挟む2点を探して線形補間
+    for (std::size_t i = 0; i + 1 < samples.size(); ++i) {
+        const TemperatureSample& before = samples[i];
+        const TemperatureSample& after = samples[i + 1];
+        if (before.time <= query_time && query_time <= after.time) {
+            const double ratio =
+                (query_time - before.time) / (after.time - before.time);
+            return before.temperature +
+                   ratio * (after.temperature - before.temperature);
         }
     }
     return std::nullopt;
 }
 
 int main() {
-    std::vector<Sample> data = {
+    std::vector<TemperatureSample> samples = {
         {0.0, 23.5}, {0.5, 24.6}, {1.0, 25.1}, {1.5, 24.3},
     };
 
-    for (double t : {0.25, 0.75, 2.0}) {
-        auto temp = temp_at(data, t);
-        if (temp) {
-            std::cout << "t = " << t << " s: " << *temp << " degC\n";
+    for (double query_time : {0.25, 0.75, 2.0}) {
+        auto temperature = TemperatureAt(samples, query_time);
+        if (temperature) {
+            std::cout << "t = " << query_time << " s: " << *temperature
+                      << " degC\n";
         } else {
-            std::cout << "t = " << t << " s: out of range\n";
+            std::cout << "t = " << query_time << " s: out of range\n";
         }
     }
     return 0;

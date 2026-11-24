@@ -2,14 +2,15 @@
 
 namespace numlib {
 
-double trapezoid(const std::function<double(double)>& f,
-                 double a, double b, int n) {
-    const double h = (b - a) / n;
-    double s = 0.5 * (f(a) + f(b));
-    for (int i = 1; i < n; ++i) {
-        s += f(a + i * h);
+double IntegrateTrapezoid(const std::function<double(double)>& integrand,
+                          double lower_limit, double upper_limit,
+                          int num_intervals) {
+    const double width = (upper_limit - lower_limit) / num_intervals;  // 台形1つの幅
+    double sum = 0.5 * (integrand(lower_limit) + integrand(upper_limit));
+    for (int i = 1; i < num_intervals; ++i) {
+        sum += integrand(lower_limit + i * width);
     }
-    return s * h;
+    return sum * width;
 }
 
 }  // namespace numlib

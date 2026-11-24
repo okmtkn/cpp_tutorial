@@ -3,45 +3,48 @@
 #include <memory>
 #include <vector>
 
+constexpr double kPi = 3.14159265358979323846;
+
 class Shape {
 public:
     virtual ~Shape() = default;       // 基底クラスのデストラクタは virtual に
-    virtual double area() const = 0;  // 純粋仮想関数
-    virtual const char* name() const = 0;
+    virtual double Area() const = 0;  // 純粋仮想関数
+    virtual const char* Name() const = 0;
 };
 
 class Circle : public Shape {
 public:
-    Circle(double r) : r_(r) {}
-    double area() const override { return 3.14159265358979 * r_ * r_; }
-    const char* name() const override { return "Circle"; }
+    Circle(double radius) : radius_(radius) {}
+    double Area() const override { return kPi * radius_ * radius_; }
+    const char* Name() const override { return "Circle"; }
 
 private:
-    double r_;
+    double radius_;
 };
 
-class Rect : public Shape {
+class Rectangle : public Shape {
 public:
-    Rect(double w, double h) : w_(w), h_(h) {}
-    double area() const override { return w_ * h_; }
-    const char* name() const override { return "Rect"; }
+    Rectangle(double width, double height) : width_(width), height_(height) {}
+    double Area() const override { return width_ * height_; }
+    const char* Name() const override { return "Rectangle"; }
 
 private:
-    double w_, h_;
+    double width_;
+    double height_;
 };
 
 int main() {
     // 「Shape の unique_ptr」の vector なら違う型を混ぜて入れられる
     std::vector<std::unique_ptr<Shape>> shapes;
     shapes.push_back(std::make_unique<Circle>(1.0));
-    shapes.push_back(std::make_unique<Rect>(2.0, 3.0));
+    shapes.push_back(std::make_unique<Rectangle>(2.0, 3.0));
     shapes.push_back(std::make_unique<Circle>(0.5));
 
-    double total = 0.0;
-    for (const auto& s : shapes) {
-        std::cout << s->name() << ": " << s->area() << "\n";
-        total += s->area();
+    double total_area = 0.0;
+    for (const auto& shape : shapes) {
+        std::cout << shape->Name() << ": " << shape->Area() << "\n";
+        total_area += shape->Area();
     }
-    std::cout << "total area: " << total << "\n";
+    std::cout << "total area: " << total_area << "\n";
     return 0;
 }  // vector 破棄時に各 unique_ptr が中身を自動 delete

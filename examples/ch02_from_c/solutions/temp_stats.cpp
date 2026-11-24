@@ -3,21 +3,21 @@
 #include <vector>
 
 int main() {
-    std::vector<double> temps = {23.5, 24.1, 22.8, 25.0, 21.9,
-                                 26.3, 23.0, 24.8, 22.5, 25.5};
+    std::vector<double> temperatures = {23.5, 24.1, 22.8, 25.0, 21.9,
+                                        26.3, 23.0, 24.8, 22.5, 25.5};  // [degC]
 
-    double sum = 0.0;
-    double hi = temps[0];  // 最初の要素で初期化するのがコツ
-    double lo = temps[0];
+    double temperature_sum = 0.0;
+    double max_temperature = temperatures[0];  // 最初の要素で初期化するのがコツ
+    double min_temperature = temperatures[0];
 
-    for (double t : temps) {
-        sum += t;
-        if (t > hi) hi = t;
-        if (t < lo) lo = t;
+    for (double temperature : temperatures) {
+        temperature_sum += temperature;
+        if (temperature > max_temperature) max_temperature = temperature;
+        if (temperature < min_temperature) min_temperature = temperature;
     }
 
-    std::cout << "mean: " << sum / temps.size() << "\n";
-    std::cout << "max : " << hi << "\n";
-    std::cout << "min : " << lo << "\n";
+    std::cout << "mean: " << temperature_sum / temperatures.size() << "\n";
+    std::cout << "max : " << max_temperature << "\n";
+    std::cout << "min : " << min_temperature << "\n";
     return 0;
 }

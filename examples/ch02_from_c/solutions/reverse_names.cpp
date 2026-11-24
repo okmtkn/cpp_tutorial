@@ -6,16 +6,16 @@
 #include <vector>
 
 int main() {
-    std::vector<std::string> names = {"Sato", "Suzuki", "Takahashi",
-                                      "Tanaka", "Watanabe"};
+    std::vector<std::string> student_names = {"Sato", "Suzuki", "Takahashi",
+                                              "Tanaka", "Watanabe"};
 
-    // 書き方1: i を 1 始まりで数えて v[size - i] を見る
-    for (std::size_t i = 1; i <= names.size(); ++i) {
-        std::cout << names[names.size() - i] << "\n";
+    // 書き方1: i を 1 始まりで数えて student_names[size - i] を見る
+    for (std::size_t i = 1; i <= student_names.size(); ++i) {
+        std::cout << student_names[student_names.size() - i] << "\n";
     }
 
     // 書き方2 (参考): 逆イテレータを使うとより簡潔
-    // for (auto it = names.rbegin(); it != names.rend(); ++it)
+    // for (auto it = student_names.rbegin(); it != student_names.rend(); ++it)
     //     std::cout << *it << "\n";
     return 0;
 }

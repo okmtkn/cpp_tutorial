@@ -5,19 +5,23 @@
 #include <vector>
 
 int main() {
-    std::vector<double> data = {23.5, 21.2, 25.8, 22.1, 24.9};
+    std::vector<double> temperatures = {23.5, 21.2, 25.8, 22.1, 24.9};  // [degC]
 
     // 合計と平均。初期値は 0 ではなく 0.0（int にすると切り捨てバグ！）
-    double total = std::accumulate(data.begin(), data.end(), 0.0);
-    std::cout << "mean: " << total / data.size() << "\n";
+    double temperature_sum =
+        std::accumulate(temperatures.begin(), temperatures.end(), 0.0);
+    std::cout << "mean: " << temperature_sum / temperatures.size() << "\n";
 
     // 最大・最小はイテレータが返るので * で値を取り出す
-    double hi = *std::max_element(data.begin(), data.end());
-    double lo = *std::min_element(data.begin(), data.end());
-    std::cout << "max: " << hi << ", min: " << lo << "\n";
+    double max_temperature =
+        *std::max_element(temperatures.begin(), temperatures.end());
+    double min_temperature =
+        *std::min_element(temperatures.begin(), temperatures.end());
+    std::cout << "max: " << max_temperature << ", min: " << min_temperature
+              << "\n";
 
-    std::sort(data.begin(), data.end());
-    for (double x : data) std::cout << x << " ";
+    std::sort(temperatures.begin(), temperatures.end());
+    for (double temperature : temperatures) std::cout << temperature << " ";
     std::cout << "\n";
     return 0;
 }

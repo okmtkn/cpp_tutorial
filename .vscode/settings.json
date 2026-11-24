@@ -1,8 +1,0 @@
-{
-    // Ninja でビルドする
-    "cmake.generator": "Ninja",
-    // フォルダを開いたときに自動で configure する
-    "cmake.configureOnOpen": true,
-    // ソースコードは UTF-8 で保存する
-    "files.encoding": "utf8"
-}

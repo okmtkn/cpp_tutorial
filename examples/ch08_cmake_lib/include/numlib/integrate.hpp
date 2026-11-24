@@ -4,10 +4,12 @@
 
 namespace numlib {
 
-// 台形則による数値積分: f を [a, b] で n 分割して積分する
+// 台形則による数値積分: 被積分関数 integrand を
+// [lower_limit, upper_limit] で num_intervals 分割して積分する
 // std::function<double(double)> は「double を受けて double を返す関数」を
 // 受け取れる型。普通の関数もラムダ式も渡せる。
-double trapezoid(const std::function<double(double)>& f,
-                 double a, double b, int n = 1000);
+double IntegrateTrapezoid(const std::function<double(double)>& integrand,
+                          double lower_limit, double upper_limit,
+                          int num_intervals = 1000);
 
 }  // namespace numlib

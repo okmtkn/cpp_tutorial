@@ -5,27 +5,30 @@
 
 namespace numlib {
 
-std::pair<double, double> mean_stddev(const std::vector<double>& v) {
-    if (v.empty()) throw std::invalid_argument("empty data");
+std::pair<double, double> MeanAndStddev(const std::vector<double>& values) {
+    if (values.empty()) throw std::invalid_argument("empty data");
 
     double sum = 0.0;
-    for (double x : v) sum += x;
-    const double mean = sum / v.size();
+    for (double value : values) sum += value;
+    const double mean = sum / values.size();
 
-    double sq = 0.0;
-    for (double x : v) sq += (x - mean) * (x - mean);
-    return {mean, std::sqrt(sq / v.size())};
+    double squared_deviation_sum = 0.0;
+    for (double value : values) {
+        squared_deviation_sum += (value - mean) * (value - mean);
+    }
+    return {mean, std::sqrt(squared_deviation_sum / values.size())};
 }
 
-std::pair<double, double> min_max(const std::vector<double>& v) {
-    if (v.empty()) throw std::invalid_argument("empty data");
+std::pair<double, double> MinMax(const std::vector<double>& values) {
+    if (values.empty()) throw std::invalid_argument("empty data");
 
-    double lo = v[0], hi = v[0];
-    for (double x : v) {
-        if (x < lo) lo = x;
-        if (x > hi) hi = x;
+    double min_value = values[0];
+    double max_value = values[0];
+    for (double value : values) {
+        if (value < min_value) min_value = value;
+        if (value > max_value) max_value = value;
     }
-    return {lo, hi};
+    return {min_value, max_value};
 }
 
 }  // namespace numlib

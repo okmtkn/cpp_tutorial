@@ -12,24 +12,25 @@ public:
     }
 
     // 応力 [MPa] = 荷重 [N] / 断面積 [mm^2]
-    double stress(double load_N) const { return load_N / area_mm2_; }
+    double Stress(double load_newton) const { return load_newton / area_mm2_; }
 
-    double area() const { return area_mm2_; }
+    double area_mm2() const { return area_mm2_; }  // 読み取り用（getter）
 
 private:
     double area_mm2_;  // 外から直接書き換えられない
 };
 
 int main() {
-    Specimen sp(25.0);  // 5mm x 5mm の試験片
-    std::cout << "stress: " << sp.stress(5000.0) << " MPa\n";  // 200 MPa
+    Specimen steel_specimen(25.0);  // 5mm x 5mm の試験片
+    std::cout << "stress: " << steel_specimen.Stress(5000.0)
+              << " MPa\n";  // 200 MPa
 
-    // sp.area_mm2_ = -1.0;  // ← コメントを外すとコンパイルエラーになる
+    // steel_specimen.area_mm2_ = -1.0;  // ← コメントを外すとコンパイルエラーになる
 
     try {
-        Specimen bad(-3.0);  // 不正な値はコンストラクタが拒否する
-    } catch (const std::exception& e) {
-        std::cout << "rejected: " << e.what() << "\n";
+        Specimen invalid_specimen(-3.0);  // 不正な値はコンストラクタが拒否する
+    } catch (const std::exception& error) {
+        std::cout << "rejected: " << error.what() << "\n";
     }
     return 0;
 }

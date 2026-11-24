@@ -9,53 +9,58 @@
 #include <string>
 #include <vector>
 
-struct Sample {
-    double time;   // [s]
-    double temp;   // [degC]
-    double accel;  // [m/s^2]
+// センサの1回分の計測値（CSV の1行に対応）
+struct SensorSample {
+    double time;          // [s]
+    double temperature;   // [degC]
+    double acceleration;  // [m/s^2]
 };
 
-std::vector<Sample> load_csv(const std::string& path) {
-    std::ifstream in(path);
-    if (!in) throw std::runtime_error("cannot open: " + path);
+std::vector<SensorSample> LoadSensorCsv(const std::string& csv_path) {
+    std::ifstream csv_file(csv_path);
+    if (!csv_file) throw std::runtime_error("cannot open: " + csv_path);
 
-    std::vector<Sample> samples;
+    std::vector<SensorSample> samples;
     std::string line;
-    std::getline(in, line);  // ヘッダ行を読み飛ばす
+    std::getline(csv_file, line);  // ヘッダ行を読み飛ばす
 
-    while (std::getline(in, line)) {
-        std::stringstream ss(line);
+    while (std::getline(csv_file, line)) {
+        std::stringstream line_stream(line);
         std::string cell;
-        Sample s{};
+        SensorSample sample{};
 
-        std::getline(ss, cell, ',');
-        s.time = std::stod(cell);
-        std::getline(ss, cell, ',');
-        s.temp = std::stod(cell);
-        std::getline(ss, cell, ',');
-        s.accel = std::stod(cell);
+        std::getline(line_stream, cell, ',');
+        sample.time = std::stod(cell);
+        std::getline(line_stream, cell, ',');
+        sample.temperature = std::stod(cell);
+        std::getline(line_stream, cell, ',');
+        sample.acceleration = std::stod(cell);
 
-        samples.push_back(s);
+        samples.push_back(sample);
     }
     return samples;
 }
 
 int main() {
-    const std::string path = std::string(DATA_DIR) + "/sensor.csv";
-    std::vector<Sample> samples = load_csv(path);
+    const std::string csv_path = std::string(DATA_DIR) + "/sensor.csv";
+    std::vector<SensorSample> samples = LoadSensorCsv(csv_path);
     std::cout << "loaded " << samples.size() << " samples\n";
 
-    // 温度の平均（accumulate + ラムダで Sample から temp を取り出しながら足す）
-    double t_sum = std::accumulate(
+    // 温度の平均（accumulate + ラムダで各サンプルの temperature を取り出しながら足す）
+    double temperature_sum = std::accumulate(
         samples.begin(), samples.end(), 0.0,
-        [](double acc, const Sample& s) { return acc + s.temp; });
-    std::cout << "mean temp: " << t_sum / samples.size() << " degC\n";
+        [](double partial_sum, const SensorSample& sample) {
+            return partial_sum + sample.temperature;
+        });
+    std::cout << "mean temp: " << temperature_sum / samples.size() << " degC\n";
 
     // 加速度が最大のサンプル（衝撃の瞬間）を探す
-    auto peak = std::max_element(
+    auto peak_sample = std::max_element(
         samples.begin(), samples.end(),
-        [](const Sample& a, const Sample& b) { return a.accel < b.accel; });
-    std::cout << "peak: t = " << peak->time << " s, accel = " << peak->accel
-              << " m/s^2\n";
+        [](const SensorSample& lhs, const SensorSample& rhs) {
+            return lhs.acceleration < rhs.acceleration;
+        });
+    std::cout << "peak: t = " << peak_sample->time
+              << " s, accel = " << peak_sample->acceleration << " m/s^2\n";
     return 0;
 }

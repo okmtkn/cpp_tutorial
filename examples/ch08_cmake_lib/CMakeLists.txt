@@ -5,6 +5,9 @@ project(ch08_cmake_lib CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
+
 # (1) 静的ライブラリ numlib を作る
 add_library(numlib STATIC
     src/integrate.cpp

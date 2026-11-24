@@ -5,6 +5,9 @@ project(ch02_from_c CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
+
 add_executable(ch02_hello_io hello_io.cpp)
 add_executable(ch02_string_basics string_basics.cpp)
 add_executable(ch02_vector_basics vector_basics.cpp)

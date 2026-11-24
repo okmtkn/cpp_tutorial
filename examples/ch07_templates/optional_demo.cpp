@@ -5,31 +5,32 @@
 #include <string>
 
 // 材料名からヤング率 [GPa] を検索。見つからないかもしれないので optional
-std::optional<double> find_young_modulus(const std::string& name) {
-    static const std::map<std::string, double> table{
+std::optional<double> FindYoungModulus(const std::string& material) {
+    // static な定数（プログラム終了まで残る）は k + PascalCase で名付ける
+    static const std::map<std::string, double> kYoungModulusTable{
         {"steel", 206.0},
         {"aluminum", 70.3},
         {"copper", 120.0},
     };
-    auto it = table.find(name);
-    if (it == table.end()) {
+    auto entry = kYoungModulusTable.find(material);
+    if (entry == kYoungModulusTable.end()) {
         return std::nullopt;  // 値なし
     }
-    return it->second;
+    return entry->second;
 }
 
 int main() {
-    for (const std::string name : {"steel", "rubber"}) {
-        std::optional<double> E = find_young_modulus(name);
-        if (E.has_value()) {
-            std::cout << name << ": " << *E << " GPa\n";
+    for (const std::string material : {"steel", "rubber"}) {
+        std::optional<double> young_modulus = FindYoungModulus(material);
+        if (young_modulus.has_value()) {
+            std::cout << material << ": " << *young_modulus << " GPa\n";
         } else {
-            std::cout << name << ": not registered\n";
+            std::cout << material << ": not registered\n";
         }
     }
 
     // 見つからなければ既定値、が1行で書ける
-    double E = find_young_modulus("rubber").value_or(0.01);
-    std::cout << "E = " << E << " GPa\n";
+    double rubber_modulus = FindYoungModulus("rubber").value_or(0.01);
+    std::cout << "rubber (default) = " << rubber_modulus << " GPa\n";
     return 0;
 }

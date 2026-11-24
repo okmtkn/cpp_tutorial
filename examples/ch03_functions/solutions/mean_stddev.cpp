@@ -4,22 +4,25 @@
 #include <utility>
 #include <vector>
 
-std::pair<double, double> mean_stddev(const std::vector<double>& v) {
+std::pair<double, double> MeanAndStddev(const std::vector<double>& values) {
     double sum = 0.0;
-    for (double x : v) sum += x;
-    const double mean = sum / v.size();
+    for (double value : values) sum += value;
+    const double mean = sum / values.size();
 
-    double sq = 0.0;
-    for (double x : v) sq += (x - mean) * (x - mean);
-    const double stddev = std::sqrt(sq / v.size());  // 母標準偏差
+    double squared_deviation_sum = 0.0;
+    for (double value : values) {
+        squared_deviation_sum += (value - mean) * (value - mean);
+    }
+    const double stddev = std::sqrt(squared_deviation_sum / values.size());  // 母標準偏差
 
     return {mean, stddev};
 }
 
 int main() {
-    std::vector<double> data = {2.1, 2.4, 1.9, 2.2, 2.0, 2.3};
+    std::vector<double> pin_diameters = {2.1, 2.4, 1.9, 2.2, 2.0, 2.3};  // ピンの直径 [mm]
 
-    auto [mean, sd] = mean_stddev(data);
-    std::cout << "mean = " << mean << ", stddev = " << sd << "\n";
+    auto [mean_diameter, stddev_diameter] = MeanAndStddev(pin_diameters);
+    std::cout << "mean = " << mean_diameter << " mm, stddev = " << stddev_diameter
+              << " mm\n";
     return 0;
 }

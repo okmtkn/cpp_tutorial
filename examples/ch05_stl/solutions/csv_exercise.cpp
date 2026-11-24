@@ -9,79 +9,90 @@
 #include <string>
 #include <vector>
 
-struct Sample {
-    double time;
-    double temp;
-    double accel;
+struct SensorSample {
+    double time;          // [s]
+    double temperature;   // [degC]
+    double acceleration;  // [m/s^2]
 };
 
-std::vector<Sample> load_csv(const std::string& path) {
-    std::ifstream in(path);
-    if (!in) throw std::runtime_error("cannot open: " + path);
+std::vector<SensorSample> LoadSensorCsv(const std::string& csv_path) {
+    std::ifstream csv_file(csv_path);
+    if (!csv_file) throw std::runtime_error("cannot open: " + csv_path);
 
-    std::vector<Sample> samples;
+    std::vector<SensorSample> samples;
     std::string line;
-    std::getline(in, line);  // ヘッダを捨てる
-    while (std::getline(in, line)) {
-        std::stringstream ss(line);
+    std::getline(csv_file, line);  // ヘッダを捨てる
+    while (std::getline(csv_file, line)) {
+        std::stringstream line_stream(line);
         std::string cell;
-        Sample s{};
-        std::getline(ss, cell, ',');
-        s.time = std::stod(cell);
-        std::getline(ss, cell, ',');
-        s.temp = std::stod(cell);
-        std::getline(ss, cell, ',');
-        s.accel = std::stod(cell);
-        samples.push_back(s);
+        SensorSample sample{};
+        std::getline(line_stream, cell, ',');
+        sample.time = std::stod(cell);
+        std::getline(line_stream, cell, ',');
+        sample.temperature = std::stod(cell);
+        std::getline(line_stream, cell, ',');
+        sample.acceleration = std::stod(cell);
+        samples.push_back(sample);
     }
     return samples;
 }
 
 int main() {
-    const std::string path = std::string(DATA_DIR) + "/sensor.csv";
-    auto samples = load_csv(path);
+    const std::string csv_path = std::string(DATA_DIR) + "/sensor.csv";
+    auto samples = LoadSensorCsv(csv_path);
 
     // --- 演習1: 温度の平均・最大・最小 ---
-    double t_sum = std::accumulate(
+    double temperature_sum = std::accumulate(
         samples.begin(), samples.end(), 0.0,
-        [](double acc, const Sample& s) { return acc + s.temp; });
-    const double t_mean = t_sum / samples.size();
+        [](double partial_sum, const SensorSample& sample) {
+            return partial_sum + sample.temperature;
+        });
+    const double mean_temperature = temperature_sum / samples.size();
 
-    auto [t_lo, t_hi] = std::minmax_element(
+    auto [coldest_sample, hottest_sample] = std::minmax_element(
         samples.begin(), samples.end(),
-        [](const Sample& a, const Sample& b) { return a.temp < b.temp; });
+        [](const SensorSample& lhs, const SensorSample& rhs) {
+            return lhs.temperature < rhs.temperature;
+        });
 
-    std::cout << "temp mean: " << t_mean << " degC\n";
-    std::cout << "temp max : " << t_hi->temp << " degC\n";
-    std::cout << "temp min : " << t_lo->temp << " degC\n";
+    std::cout << "temp mean: " << mean_temperature << " degC\n";
+    std::cout << "temp max : " << hottest_sample->temperature << " degC\n";
+    std::cout << "temp min : " << coldest_sample->temperature << " degC\n";
 
     // --- 演習1: |accel| > 1.0 の時刻一覧 ---
-    std::cout << "|accel| > 1.0 at: ";
-    for (const Sample& s : samples) {
-        if (std::abs(s.accel) > 1.0) std::cout << s.time << "s ";
+    constexpr double kAccelerationThreshold = 1.0;  // [m/s^2]
+    std::cout << "|accel| > " << kAccelerationThreshold << " at: ";
+    for (const SensorSample& sample : samples) {
+        if (std::abs(sample.acceleration) > kAccelerationThreshold) {
+            std::cout << sample.time << "s ";
+        }
     }
     std::cout << "\n";
 
     // --- 演習2: 加速度の標準偏差 ---
-    double a_sum = std::accumulate(
+    double acceleration_sum = std::accumulate(
         samples.begin(), samples.end(), 0.0,
-        [](double acc, const Sample& s) { return acc + s.accel; });
-    const double a_mean = a_sum / samples.size();
-    double sq = std::accumulate(
-        samples.begin(), samples.end(), 0.0,
-        [a_mean](double acc, const Sample& s) {
-            return acc + (s.accel - a_mean) * (s.accel - a_mean);
+        [](double partial_sum, const SensorSample& sample) {
+            return partial_sum + sample.acceleration;
         });
-    const double a_sd = std::sqrt(sq / samples.size());
-    std::cout << "accel stddev: " << a_sd << " m/s^2\n";
+    const double mean_acceleration = acceleration_sum / samples.size();
+    double squared_deviation_sum = std::accumulate(
+        samples.begin(), samples.end(), 0.0,
+        [mean_acceleration](double partial_sum, const SensorSample& sample) {
+            const double deviation = sample.acceleration - mean_acceleration;
+            return partial_sum + deviation * deviation;
+        });
+    const double acceleration_stddev =
+        std::sqrt(squared_deviation_sum / samples.size());
+    std::cout << "accel stddev: " << acceleration_stddev << " m/s^2\n";
 
     // --- 演習3 (発展): 集計結果を CSV に書き出す ---
-    std::ofstream out("summary.csv");
-    out << "item,value\n";
-    out << "temp_mean," << t_mean << "\n";
-    out << "temp_max," << t_hi->temp << "\n";
-    out << "temp_min," << t_lo->temp << "\n";
-    out << "accel_stddev," << a_sd << "\n";
+    std::ofstream summary_file("summary.csv");
+    summary_file << "item,value\n";
+    summary_file << "temp_mean," << mean_temperature << "\n";
+    summary_file << "temp_max," << hottest_sample->temperature << "\n";
+    summary_file << "temp_min," << coldest_sample->temperature << "\n";
+    summary_file << "accel_stddev," << acceleration_stddev << "\n";
     std::cout << "wrote summary.csv\n";
     return 0;
 }

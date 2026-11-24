@@ -25,9 +25,11 @@ Cでやったのと同じ考え方です。**宣言をヘッダ(.hpp)に、定�
 
 namespace numlib {
 
-// 台形則による数値積分: f を [a, b] で n 分割して積分する
-double trapezoid(const std::function<double(double)>& f,
-                 double a, double b, int n = 1000);
+// 台形則による数値積分: 被積分関数 integrand を
+// [lower_limit, upper_limit] で num_intervals 分割して積分する
+double IntegrateTrapezoid(const std::function<double(double)>& integrand,
+                          double lower_limit, double upper_limit,
+                          int num_intervals = 1000);
 
 }  // namespace numlib
 ```
@@ -39,26 +41,34 @@ double trapezoid(const std::function<double(double)>& f,
 
 namespace numlib {
 
-double trapezoid(const std::function<double(double)>& f,
-                 double a, double b, int n) {
-    const double h = (b - a) / n;
-    double s = 0.5 * (f(a) + f(b));
-    for (int i = 1; i < n; ++i) {
-        s += f(a + i * h);
+double IntegrateTrapezoid(const std::function<double(double)>& integrand,
+                          double lower_limit, double upper_limit,
+                          int num_intervals) {
+    const double width = (upper_limit - lower_limit) / num_intervals;  // 台形1つの幅
+    double sum = 0.5 * (integrand(lower_limit) + integrand(upper_limit));
+    for (int i = 1; i < num_intervals; ++i) {
+        sum += integrand(lower_limit + i * width);
     }
-    return s * h;
+    return sum * width;
 }
 
 }  // namespace numlib
 ```
 
+ヘッダは「使う人が最初に読む説明書」です。引数名を `f, a, b, n` ではなく
+`integrand, lower_limit, upper_limit, num_intervals` にしておけば、
+実装を読まなくても使い方が分かります。
+
 新しい要素:
 
 - **`#pragma once`** … `#ifndef XXX_H` / `#define` / `#endif` のガードと同じ役割の1行版
-- **`namespace numlib { }`** … 自作ライブラリの関数を `numlib::trapezoid` のように
+- **`namespace numlib { }`** … 自作ライブラリの関数を `numlib::IntegrateTrapezoid` のように
   名前空間で包む。他のライブラリと名前が衝突しなくなる（`std::` と同じ仕組み）
 - **`std::function<double(double)>`** … 「double を受けて double を返す関数」を
   受け取れる型。関数もラムダ式も渡せる
+- **デフォルト引数は宣言（ヘッダ）側にだけ書く** … `num_intervals = 1000` はヘッダにだけあり、
+  `.cpp` の定義には書いていません。使う側が見るのはヘッダなので既定値はそこに書き、
+  定義側にも `= 1000` を書くと「デフォルト引数の再定義」というコンパイルエラーになります
 
 ## 8.3 実務スタイルのフォルダ構成
 
@@ -92,6 +102,9 @@ project(ch08_cmake_lib CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 警告を多めに出す（初学者ほど警告に助けられます）
+add_compile_options(-Wall -Wextra)
 
 # (1) 静的ライブラリ numlib を作る
 add_library(numlib STATIC
@@ -129,43 +142,68 @@ target_link_libraries(ch08_app PRIVATE numlib)
 // apps/main.cpp
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "numlib/integrate.hpp"
 #include "numlib/statistics.hpp"
 
 int main() {
     // sin(x) を [0, π] で積分（理論値 2.0）
-    constexpr double PI = 3.14159265358979323846;
-    double s = numlib::trapezoid([](double x) { return std::sin(x); }, 0.0, PI);
-    std::cout << "integral = " << s << "\n";
+    constexpr double kPi = 3.14159265358979323846;
+    const double sin_integral = numlib::IntegrateTrapezoid(
+        [](double x) { return std::sin(x); }, 0.0, kPi);
+    std::cout << "integral = " << sin_integral << "\n";
 
-    std::vector<double> data = {2.1, 2.4, 1.9, 2.2, 2.0};
-    auto [mean, sd] = numlib::mean_stddev(data);
-    std::cout << "mean = " << mean << ", sd = " << sd << "\n";
+    std::vector<double> pin_diameters = {2.1, 2.4, 1.9, 2.2, 2.0};  // ピンの直径 [mm]
+    auto [mean_diameter, stddev_diameter] = numlib::MeanAndStddev(pin_diameters);
+    std::cout << "mean = " << mean_diameter << ", stddev = " << stddev_diameter << "\n";
     return 0;
 }
 ```
+
+ラムダの引数 `x` は数式 f(x) の x そのものなので、短い名前のままの方がかえって読みやすい例です。
 
 ビルド・実行方法はこれまでと**まったく同じ**です（`F7` → ターゲット `ch08_app` を実行）。
 ファイルが何十個に増えても手順が変わらないのが CMake の価値です。
 
 ## 8.6 add_subdirectory — プロジェクトの入れ子
 
-このチュートリアルのルート `CMakeLists.txt` を開いてみてください。
+このチュートリアルのサンプルは1つの CMakeLists.txt で完結していますが、
+プロジェクトが大きくなると、ライブラリごとにフォルダを分けて
+それぞれに CMakeLists.txt を置くことがよくあります。
+
+```
+my_project/
+├── CMakeLists.txt       ← 親: 全体をまとめる
+├── numlib/
+│   ├── CMakeLists.txt   ← 子: add_library(numlib ...) を書く
+│   ├── include/
+│   └── src/
+└── apps/
+    ├── CMakeLists.txt   ← 子: add_executable(app ...) を書く
+    └── main.cpp
+```
 
 ```cmake
-add_subdirectory(examples/ch01_hello)
-add_subdirectory(examples/ch02_from_c)
-...
+# my_project/CMakeLists.txt（親）
+cmake_minimum_required(VERSION 3.21)
+project(my_project CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-Wall -Wextra)
+
+add_subdirectory(numlib)
+add_subdirectory(apps)
 ```
 
 `add_subdirectory(dir)` は「そのフォルダの CMakeLists.txt も読み込む」命令です。
-大きなプロジェクトは、この仕組みで「ライブラリごとのフォルダ + それを束ねる親」という
-構成を作ります。1〜8章のサンプルが一度にビルドできていたのはこのおかげです。
+こうすると「ライブラリごとのフォルダ + それを束ねる親」という構成を作れます。
+ターゲット名はプロジェクト全体で共通なので、`apps/CMakeLists.txt` では
+`numlib/` 側で作った `numlib` をそのまま `target_link_libraries` に書けます。
 
-また、ルートで `set(CMAKE_CXX_STANDARD 17)` や `add_compile_options(-Wall -Wextra)` を
-書いておくと、子フォルダ全体に効きます。**警告オプション `-Wall -Wextra` は常に付ける**
-習慣にしてください。バグの多くは警告の段階で見つかります。
+また、親で `set(CMAKE_CXX_STANDARD 17)` や `add_compile_options(-Wall -Wextra)` を
+書いておくと、子フォルダ全体に効きます。
 
 ## 8.7 コンパイル時のマクロ定義（第5章の種明かし）
 
@@ -179,7 +217,7 @@ target_compile_definitions(ch05_csv_stats
 これは gcc の `-DDATA_DIR="..."` オプションに相当し、C++ 側では
 
 ```cpp
-std::string path = std::string(DATA_DIR) + "/sensor.csv";
+std::string csv_path = std::string(DATA_DIR) + "/sensor.csv";
 ```
 
 のように「CMake が知っている情報（ソースのパス）」をコードに渡せます。
@@ -188,9 +226,12 @@ CMake の変数です。
 
 ## 8.8 演習
 
+サンプルには演習1・2の解答が組み込み済みなので、`examples/ch08_cmake_lib` から
+`MinMax` と `integral_table.cpp` を除いた形で `work\ch08` にコピーし、そこで取り組んでください。
+
 1. サンプルの numlib に、第3章で作った統計関数を移植した
    `statistics.hpp / statistics.cpp` があります。ここに
-   「最大値・最小値を返す `min_max`」を追加し、apps/main.cpp から呼んでください。
+   「最小値・最大値を返す `MinMax`」を追加し、apps/main.cpp から呼んでください。
 2. `apps/` に2つ目の実行ファイル `integral_table.cpp` を追加してください。
    内容: x², sin(x), e^x の [0,1] 積分値の表を表示する。
    CMakeLists.txt に何を足せばよいか考えましょう。

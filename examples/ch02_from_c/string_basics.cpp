@@ -3,15 +3,17 @@
 #include <string>
 
 int main() {
-    std::string name = "Okamoto";
+    std::string name = "Kosen Taro";
     std::string greeting = "Hello, " + name + "!";  // + で連結
 
     std::cout << greeting << "\n";
     std::cout << "length: " << greeting.size() << "\n";
     std::cout << "first char: " << greeting[0] << "\n";
 
-    if (name == "Okamoto") {  // strcmp ではなく == で比較
+    if (name == "Kosen Taro") {  // strcmp ではなく == で比較
         std::cout << "name matched\n";
+    } else {
+        std::cout << "name not matched\n";
     }
 
     std::string line;
